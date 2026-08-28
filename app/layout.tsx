@@ -3,6 +3,7 @@ import './globals.css';
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://forma-intentional-templates.chhabra-05-keshav.chatgpt.site'),
   title: 'Forma — Less chaos. More you.',
   description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.',
   openGraph: { title: 'Forma — Less chaos. More you.', description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.', images: ['/og.png'] },
