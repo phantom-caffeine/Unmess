@@ -1,6 +1,6 @@
 'use client';
 
-import {motion, useInView, useReducedMotion, type Variants} from 'framer-motion';
+import {motion, useReducedMotion, type Variants} from 'framer-motion';
 import {useEffect, useRef, useState, type CSSProperties, type ReactNode} from 'react';
 
 type VisualState = 'messy' | 'transitioning' | 'clear';
@@ -26,20 +26,19 @@ function FloatingAnnotation({className,children}:{className:string;children:Reac
 
 export function ChaosToClarityVisual() {
   const root = useRef<HTMLDivElement>(null);
-  const inView = useInView(root,{once:true,amount:.35});
+  const scrollProgress = useRef(0);
   const reducedMotion = useReducedMotion();
   const [visualState,setVisualState] = useState<VisualState>(reducedMotion?'clear':'messy');
   useEffect(()=>{
     if(reducedMotion){setVisualState('clear');return;}
-    if(!inView)return;
-    let timer:ReturnType<typeof setTimeout>; let cancelled=false;
-    const cycle=()=>{setVisualState('transitioning');timer=setTimeout(()=>{if(cancelled)return;setVisualState('clear');timer=setTimeout(()=>{if(cancelled)return;setVisualState('transitioning');timer=setTimeout(()=>{if(cancelled)return;setVisualState('messy');timer=setTimeout(cycle,2000)},4800)},2000)},4800)};
-    timer=setTimeout(cycle,650);return()=>{cancelled=true;clearTimeout(timer)};
-  },[inView,reducedMotion]);
+    const update=(event:Event)=>{const progress=(event as CustomEvent<number>).detail;scrollProgress.current=progress;setVisualState(progress<.16?'messy':progress<.74?'transitioning':'clear')};
+    window.addEventListener('unmess:hero-progress',update);
+    return()=>window.removeEventListener('unmess:hero-progress',update);
+  },[reducedMotion]);
   const moveLight=(event:React.PointerEvent<HTMLDivElement>)=>{if(reducedMotion||event.pointerType==='touch'||!root.current)return;const box=root.current.getBoundingClientRect();root.current.style.setProperty('--light-x',`${event.clientX-box.left}px`);root.current.style.setProperty('--light-y',`${event.clientY-box.top}px`)};
-  const duration=reducedMotion?0:visualState==='transitioning'?4.8:.8;
+  const duration=reducedMotion?0:visualState==='transitioning'?1.25:.7;
   const transition={duration,ease};
-  return <motion.div ref={root} className="ctc" data-state={visualState} initial={false} animate={visualState} onPointerMove={moveLight} style={{'--light-x':'68%','--light-y':'32%'} as CSSProperties} aria-label="A tangled mind slowly resolving into a clear, calm flow">
+  return <motion.div ref={root} className="ctc" data-state={visualState} data-cursor="Comb" initial={false} animate={visualState} onPointerMove={moveLight} onPointerEnter={()=>{if(!reducedMotion)setVisualState('clear')}} onPointerLeave={()=>{if(!reducedMotion){const progress=scrollProgress.current;setVisualState(progress<.16?'messy':progress<.74?'transitioning':'clear')}}} style={{'--light-x':'68%','--light-y':'32%'} as CSSProperties} aria-label="A tangled mind slowly resolving into a clear, calm flow">
     <div className="ctc-copy"><span>From scattered to sorted.</span><small>Turn noise into a clear next move.</small></div>
     <motion.div className="ctc-stage" initial={false} animate={visualState}>
       <motion.div className="ctc-cursor-light" aria-hidden="true" variants={{messy:{opacity:.08},transitioning:{opacity:.18},clear:{opacity:.3}}} transition={transition}/>
