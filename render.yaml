@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: unmess-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: FRONTEND_ORIGIN
+        value: https://forma-intentional-templates.chhabra-05-keshav.chatgpt.site
+      - key: MONGODB_URI
+        sync: false
+      - key: ANALYTICS_ADMIN_TOKEN
+        generateValue: true
+      - key: DELIVERY_API_TOKEN
+        generateValue: true
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

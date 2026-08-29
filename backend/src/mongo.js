@@ -42,3 +42,24 @@ export async function getAllClickCounts() {
     }),
   );
 }
+
+export async function initializeClickCounters() {
+  const client = await getClient();
+  await Promise.all(
+    Object.entries(templates).map(([templateId, databaseName]) =>
+      client.db(databaseName).collection('analytics').updateOne(
+        { _id: 'clicks' },
+        {
+          $setOnInsert: {
+            templateId,
+            count: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true },
+      ),
+    ),
+  );
+  return getAllClickCounts();
+}

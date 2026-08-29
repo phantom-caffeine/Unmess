@@ -13,4 +13,10 @@ Each template uses its own database. Every database contains a single `analytics
 3. Run `npm install`, then `npm start`.
 4. Set the storefront build variable `NEXT_PUBLIC_ANALYTICS_API_URL` to this backend's HTTPS origin.
 
+## Deploy
+
+The repository includes `render.yaml` for a Render Blueprint and a `Dockerfile` for any container host. Configure `MONGODB_URI` as a secret on the host; never expose it through a `NEXT_PUBLIC_` variable. After deployment, set the Site build variable `NEXT_PUBLIC_ANALYTICS_API_URL` to the API's public HTTPS origin and republish the storefront.
+
+Run `npm run analytics:init` once after configuring `MONGODB_URI`. It creates one `analytics` document per template database and never resets an existing count.
+
 The delivery endpoint is intentionally private. Call it only after a Razorpay webhook signature and captured payment have been verified.
