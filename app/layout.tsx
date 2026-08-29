@@ -4,10 +4,10 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://forma-intentional-templates.chhabra-05-keshav.chatgpt.site'),
-  title: 'Forma — Less chaos. More you.',
+  title: 'Unmess — Less chaos. More you.',
   description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.',
-  openGraph: { title: 'Forma — Less chaos. More you.', description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.', images: ['/og.png'] },
-  twitter: { card: 'summary_large_image', title: 'Forma — Less chaos. More you.', description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.', images: ['/og.png'] },
+  openGraph: { title: 'Unmess — Less chaos. More you.', description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.', images: ['/og.png'] },
+  twitter: { card: 'summary_large_image', title: 'Unmess — Less chaos. More you.', description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.', images: ['/og.png'] },
 };
 
 export default function RootLayout({
