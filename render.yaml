@@ -14,6 +14,10 @@ services:
         value: https://forma-intentional-templates.chhabra-05-keshav.chatgpt.site
       - key: MONGODB_URI
         sync: false
+      - key: MONGODB_DB_NAME
+        value: unmess
+      - key: MONGODB_COLLECTION_NAME
+        value: store
       - key: ANALYTICS_ADMIN_TOKEN
         generateValue: true
       - key: DELIVERY_API_TOKEN

@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import {initializeClickCounters} from './mongo.js';
+import {initializeStore} from './mongo.js';
 
 try {
-  const counters = await initializeClickCounters();
-  console.log(JSON.stringify({initialized:true,templates:counters},null,2));
+  const store = await initializeStore();
+  console.log(JSON.stringify({initialized:true,...store},null,2));
   process.exit(0);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

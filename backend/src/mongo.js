@@ -1,65 +1,67 @@
 import { MongoClient } from 'mongodb';
-import { required, templates } from './config.js';
+import { payment, required, templates } from './config.js';
 
+const databaseName = process.env.MONGODB_DB_NAME || 'unmess';
+const collectionName = process.env.MONGODB_COLLECTION_NAME || 'store';
 let clientPromise;
+
 function getClient() {
   if (!clientPromise) {
-    const client = new MongoClient(required('MONGODB_URI'), {
-      maxPoolSize: 10,
-      minPoolSize: 0,
-      serverSelectionTimeoutMS: 8000,
-    });
+    const client = new MongoClient(required('MONGODB_URI'), { maxPoolSize: 10, minPoolSize: 0, serverSelectionTimeoutMS: 8000 });
     clientPromise = client.connect();
   }
   return clientPromise;
 }
 
-export async function incrementTemplateClicks(templateId) {
-  const databaseName = templates[templateId];
-  if (!databaseName) return null;
+async function getStore() {
   const client = await getClient();
-  const result = await client
-    .db(databaseName)
-    .collection('analytics')
-    .findOneAndUpdate(
-      { _id: 'clicks' },
-      {
-        $inc: { count: 1 },
-        $set: { updatedAt: new Date() },
-        $setOnInsert: { templateId, createdAt: new Date() },
-      },
-      { upsert: true, returnDocument: 'after' },
-    );
-  return result;
+  return client.db(databaseName).collection(collectionName);
+}
+
+export async function incrementTemplateClicks(templateId) {
+  if (!templates[templateId]) return null;
+  const store = await getStore();
+  return store.findOneAndUpdate(
+    { _id: `template:${templateId}`, type: 'template' },
+    { $inc: { clicks: 1 }, $set: { updatedAt: new Date() } },
+    { returnDocument: 'after' },
+  );
+}
+
+export async function getTemplate(templateId) {
+  if (!templates[templateId]) return null;
+  const store = await getStore();
+  return store.findOne({ _id: `template:${templateId}`, type: 'template' });
 }
 
 export async function getAllClickCounts() {
-  const client = await getClient();
-  return Promise.all(
-    Object.entries(templates).map(async ([templateId, databaseName]) => {
-      const doc = await client.db(databaseName).collection('analytics').findOne({ _id: 'clicks' });
-      return { templateId, clicks: doc?.count ?? 0, updatedAt: doc?.updatedAt ?? null };
-    }),
-  );
+  const store = await getStore();
+  const docs = await store.find({ type: 'template' }, { projection: { name: 1, clicks: 1, updatedAt: 1 } }).toArray();
+  return docs.map(doc => ({ templateId: doc._id.replace('template:', ''), name: doc.name, clicks: doc.clicks ?? 0, updatedAt: doc.updatedAt ?? null }));
 }
 
-export async function initializeClickCounters() {
-  const client = await getClient();
-  await Promise.all(
-    Object.entries(templates).map(([templateId, databaseName]) =>
-      client.db(databaseName).collection('analytics').updateOne(
-        { _id: 'clicks' },
-        {
-          $setOnInsert: {
-            templateId,
-            count: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-        { upsert: true },
-      ),
-    ),
+export async function initializeStore() {
+  const store = await getStore();
+  const now = new Date();
+  await Promise.all(Object.entries(templates).map(([templateId, template]) => store.updateOne(
+    { _id: `template:${templateId}` },
+    {
+      $set: { type: 'template', templateId, name: template.name, url: template.url, price: payment.templatePrice, currency: payment.currency, updatedAt: now },
+      $setOnInsert: { clicks: 0, createdAt: now },
+    },
+    { upsert: true },
+  )));
+  await store.updateOne(
+    { _id: 'payment' },
+    {
+      $set: { type: 'payment', ...payment, updatedAt: now },
+      $setOnInsert: { totalPayments: 0, totalRevenue: 0, lastPayment: null, createdAt: now },
+    },
+    { upsert: true },
   );
-  return getAllClickCounts();
+  await store.updateOne(
+    { _id: 'payment', totalPayments: { $exists: false } },
+    { $set: { totalPayments: 0, totalRevenue: 0, lastPayment: null } },
+  );
+  return { templates: await getAllClickCounts(), payment: await store.findOne({ _id: 'payment' }) };
 }

@@ -2,9 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { incrementTemplateClicks, getAllClickCounts } from './mongo.js';
+import { incrementTemplateClicks, getAllClickCounts, getTemplate } from './mongo.js';
 import { sendTemplateDelivery } from './email.js';
-import { required, templates, templateLinks } from './config.js';
+import { required, templates } from './config.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -49,9 +49,11 @@ app.post('/api/delivery/send', async (req, res, next) => {
     if (req.get('authorization') !== `Bearer ${required('DELIVERY_API_TOKEN')}`) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const { email, productName, templateId, orderId } = req.body || {};
-    const downloadUrl = templateLinks[templateId];
-    if (!email || !productName || !templateId || !downloadUrl || !orderId) return res.status(400).json({ error: 'Missing or unknown delivery fields' });
+    const { email, templateId, orderId } = req.body || {};
+    const template = await getTemplate(templateId);
+    if (!email || !templateId || !template || !orderId) return res.status(400).json({ error: 'Missing or unknown delivery fields' });
+    const productName = template.name;
+    const downloadUrl = template.url;
     const parsedUrl = new URL(downloadUrl);
     if (parsedUrl.protocol !== 'https:') return res.status(400).json({ error: 'Download URL must use HTTPS' });
     await sendTemplateDelivery({ email, productName, downloadUrl, orderId });

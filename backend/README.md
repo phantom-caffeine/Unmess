@@ -4,7 +4,7 @@ Node service for MongoDB click counters and post-payment email delivery.
 
 ## Data model
 
-Each template uses its own database. Every database contains a single `analytics` document with `_id: "clicks"`. A click performs one atomic `$inc`; it does not create an event row.
+MongoDB uses one `unmess` database and one `store` collection with exactly five core documents: four template documents and one payment document. Each template document stores its name, protected Notion URL, ₹499 price, and click total. A view performs one atomic `$inc` on that document; it never creates an event row.
 
 ## Setup
 
@@ -17,6 +17,6 @@ Each template uses its own database. Every database contains a single `analytics
 
 The repository includes `render.yaml` for a Render Blueprint and a `Dockerfile` for any container host. Configure `MONGODB_URI` as a secret on the host; never expose it through a `NEXT_PUBLIC_` variable. After deployment, set the Site build variable `NEXT_PUBLIC_ANALYTICS_API_URL` to the API's public HTTPS origin and republish the storefront.
 
-Run `npm run analytics:init` once after configuring `MONGODB_URI`. It creates one `analytics` document per template database and never resets an existing count.
+Run `npm run analytics:init` once after configuring `MONGODB_URI`. It upserts the five core documents and never resets existing click totals.
 
 The delivery endpoint is intentionally private. Call it only after a Razorpay webhook signature and captured payment have been verified. Pass the purchased `templateId`; the server resolves its stored Notion duplication link so paid links are never accepted from the browser.
