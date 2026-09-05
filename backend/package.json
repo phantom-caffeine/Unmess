@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "analytics:init": "node src/initialize.js"
+    "analytics:init": "node src/initialize.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"

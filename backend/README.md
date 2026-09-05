@@ -20,3 +20,9 @@ The repository includes `render.yaml` for a Render Blueprint and a `Dockerfile` 
 Run `npm run analytics:init` once after configuring `MONGODB_URI`. It upserts the four template documents, removes the obsolete payment document, and never resets existing click totals.
 
 The delivery endpoint is intentionally private. Call it only after a Razorpay webhook signature and captured payment have been verified. Pass the purchased `templateId`; the server resolves its stored Notion duplication link so paid links are never accepted from the browser.
+
+## Razorpay checkout
+
+The storefront uses Standard Checkout through `POST /api/payment/create-order`, verifies the checkout signature through `POST /api/payment/verify`, and accepts signed `payment.captured` events at `POST /api/payment/webhook`. Amounts are calculated on the server. Payment state remains in Razorpay order notes and is never written to MongoDB.
+
+Configure `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and a separate `RAZORPAY_WEBHOOK_SECRET` on the backend host. The frontend receives only the safe Key ID. Configure `NEXT_PUBLIC_ANALYTICS_API_URL` with the public HTTPS backend origin.
