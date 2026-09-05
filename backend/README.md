@@ -19,4 +19,4 @@ The repository includes `render.yaml` for a Render Blueprint and a `Dockerfile` 
 
 Run `npm run analytics:init` once after configuring `MONGODB_URI`. It creates one `analytics` document per template database and never resets an existing count.
 
-The delivery endpoint is intentionally private. Call it only after a Razorpay webhook signature and captured payment have been verified.
+The delivery endpoint is intentionally private. Call it only after a Razorpay webhook signature and captured payment have been verified. Pass the purchased `templateId`; the server resolves its stored Notion duplication link so paid links are never accepted from the browser.
