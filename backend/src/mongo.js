@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { payment, required, templates } from './config.js';
+import { required, templates } from './config.js';
 
 const databaseName = process.env.MONGODB_DB_NAME || 'unmess';
 const collectionName = process.env.MONGODB_COLLECTION_NAME || 'store';
@@ -46,22 +46,12 @@ export async function initializeStore() {
   await Promise.all(Object.entries(templates).map(([templateId, template]) => store.updateOne(
     { _id: `template:${templateId}` },
     {
-      $set: { type: 'template', templateId, name: template.name, url: template.url, price: payment.templatePrice, currency: payment.currency, updatedAt: now },
+      $set: { type: 'template', templateId, name: template.name, url: template.url, updatedAt: now },
+      $unset: { price: '', currency: '' },
       $setOnInsert: { clicks: 0, createdAt: now },
     },
     { upsert: true },
   )));
-  await store.updateOne(
-    { _id: 'payment' },
-    {
-      $set: { type: 'payment', ...payment, updatedAt: now },
-      $setOnInsert: { totalPayments: 0, totalRevenue: 0, lastPayment: null, createdAt: now },
-    },
-    { upsert: true },
-  );
-  await store.updateOne(
-    { _id: 'payment', totalPayments: { $exists: false } },
-    { $set: { totalPayments: 0, totalRevenue: 0, lastPayment: null } },
-  );
-  return { templates: await getAllClickCounts(), payment: await store.findOne({ _id: 'payment' }) };
+  await store.deleteOne({ _id: 'payment' });
+  return { templates: await getAllClickCounts() };
 }

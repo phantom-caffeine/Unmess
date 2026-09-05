@@ -5,8 +5,6 @@ export const templates = {
   'where-the-fck-is-my-money': { name: 'Where The F*ck Is My Money?', url: 'https://sky-rhythm-395.notion.site/Where-The-F-ck-Is-My-Money-3d2b16643a1381af9b38cc431572dd50?source=copy_link' },
 };
 
-export const payment = { provider: 'Razorpay', paymentUrl: 'https://razorpay.me/@unmess', currency: 'INR', templatePrice: 499 };
-
 export function required(name) {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
