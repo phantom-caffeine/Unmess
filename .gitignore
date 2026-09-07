@@ -26,8 +26,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local environment
-.env*
+# local environment and credentials
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
 
 # deployment and generated files
 .vercel
@@ -37,5 +47,10 @@ next-env.d.ts
 /outputs/
 /work/
 *.tsbuildinfo
-backend/.env
 /npm-cache/
+
+# local editor and OS state
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
