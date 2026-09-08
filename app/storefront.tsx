@@ -48,12 +48,13 @@ const reduced=useReducedMotion();
 const [loading,setLoading]=useState(view==='home'),[scrolled,setScrolled]=useState(false),[menu,setMenu]=useState(false),[category,setCategory]=useState('All templates'),[selected,setSelected]=useState<Product|null>(null),[cart,setCart]=useState<Product[]>([]),[cartOpen,setCartOpen]=useState(false),[faq,setFaq]=useState<number|null>(0),[notice,setNotice]=useState(''),[email,setEmail]=useState(''),[subscribed,setSubscribed]=useState(false),[info,setInfo]=useState<string|null>(null),[checkoutEmail,setCheckoutEmail]=useState(''),[paying,setPaying]=useState(false),[deliveryLinks,setDeliveryLinks]=useState<DeliveryLink[]>([]);
 const [pricing,setPricing]=useState({currency:'INR',rate:1,approximate:false});
 const analyticsBase=(process.env.NEXT_PUBLIC_ANALYTICS_API_URL||'').replace(/\/$/,'');
+const cartStorageKey='unmess-cart-v1';
 // Paste your Google Meet, Calendly, or booking URL here when it is ready.
 const customTemplateCallUrl='';
 const formatPrice=(amount:number)=>new Intl.NumberFormat(undefined,{style:'currency',currency:pricing.currency,maximumFractionDigits:pricing.currency==='JPY'||pricing.currency==='KRW'?0:2}).format(amount*pricing.rate);
 const trackClick=(product:Product)=>{if(!analyticsBase)return;void fetch(analyticsBase+'/api/clicks/'+product.slug,{method:'POST',keepalive:true}).catch(()=>{});};
 const cursor=useRef<HTMLDivElement>(null), scrollComb=useRef<HTMLDivElement>(null), heroSection=useRef<HTMLElement>(null), gallery=useRef<HTMLDivElement>(null), gallerySection=useRef<HTMLElement>(null);
-useEffect(()=>{void fetch('/api/pricing').then(r=>r.ok?r.json() as Promise<{currency:string,rate:number,approximate:boolean}>:Promise.reject()).then(data=>{if(data.currency&&Number(data.rate)>0)setPricing(data)}).catch(()=>{});const t=setTimeout(()=>setLoading(false),900);try{const ids=JSON.parse(localStorage.getItem('unmess-cart')||'[]');if(Array.isArray(ids))setCart([...products,bundle].filter(p=>ids.includes(p.id)))}catch{}return()=>clearTimeout(t)},[]);
+useEffect(()=>{void fetch('/api/pricing').then(r=>r.ok?r.json() as Promise<{currency:string,rate:number,approximate:boolean}>:Promise.reject()).then(data=>{if(data.currency&&Number(data.rate)>0)setPricing(data)}).catch(()=>{});const t=setTimeout(()=>setLoading(false),900);try{localStorage.removeItem('unmess-cart');const ids=JSON.parse(localStorage.getItem(cartStorageKey)||'[]');if(Array.isArray(ids))setCart([...products,bundle].filter(p=>ids.includes(p.id)))}catch{}return()=>clearTimeout(t)},[]);
 useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),3500);return()=>clearTimeout(t)},[notice]);
 useEffect(()=>{gsap.registerPlugin(ScrollTrigger);const mm=gsap.matchMedia();let lenis:Lenis|undefined;let raf=0;
 if(!matchMedia('(prefers-reduced-motion:reduce)').matches){lenis=new Lenis({duration:1.1,anchors:true});const tick=(time:number)=>{lenis?.raf(time);raf=requestAnimationFrame(tick)};raf=requestAnimationFrame(tick);lenis.on('scroll',ScrollTrigger.update);}
@@ -64,8 +65,8 @@ mm.add('(min-width:801px) and (prefers-reduced-motion:no-preference)',()=>{if(!h
 const pointer=(e:MouseEvent)=>{const el=cursor.current;if(!el)return;el.style.left=e.clientX+'px';el.style.top=e.clientY+'px';const target=(e.target as HTMLElement).closest<HTMLElement>('[data-cursor],button,a');const comb=target?.dataset.cursor==='Comb';el.textContent=comb?'':target?.dataset.cursor||(target?'↗':'');el.classList.toggle('active',!!target);el.classList.toggle('comb',comb);el.style.opacity='1';};
 window.addEventListener('mousemove',pointer);return()=>{window.removeEventListener('mousemove',pointer);window.removeEventListener('scroll',handleScroll);cancelAnimationFrame(raf);lenis?.destroy();mm.revert()};
 },[]);
-const add=(p:Product)=>{if(p.id!==bundle.id)trackClick(p);const next=cart.some(x=>x.id===p.id)?cart:[...cart,p];setCart(next);try{localStorage.setItem('unmess-cart',JSON.stringify(next.map(x=>x.id)))}catch{}setSelected(null);setCartOpen(true);setNotice('A little possibility, added to your bag.')};
-const remove=(id:number)=>{const next=cart.filter(p=>p.id!==id);setCart(next);try{localStorage.setItem('unmess-cart',JSON.stringify(next.map(x=>x.id)))}catch{}};
+const add=(p:Product)=>{if(p.id!==bundle.id)trackClick(p);const next=cart.some(x=>x.id===p.id)?cart:[...cart,p];setCart(next);try{localStorage.setItem(cartStorageKey,JSON.stringify(next.map(x=>x.id)))}catch{}setSelected(null);setCartOpen(true);setNotice('A little possibility, added to your bag.')};
+const remove=(id:number)=>{const next=cart.filter(p=>p.id!==id);setCart(next);try{localStorage.setItem(cartStorageKey,JSON.stringify(next.map(x=>x.id)))}catch{}};
 const startPayment=async()=>{
   if(!analyticsBase){setNotice('Checkout is waiting for the backend URL.');return}
   if(!/^\S+@\S+\.\S+$/.test(checkoutEmail)){setNotice('Enter a valid email for template delivery.');return}
@@ -83,7 +84,7 @@ const startPayment=async()=>{
         const result=await verified.json() as VerificationResult;
         if(!verified.ok)throw new Error(result.error||'Payment verification failed');
         if(result.pending){setNotice('Payment verified. Your email is being prepared.');return}
-        setDeliveryLinks(result.links||[]);setCart([]);localStorage.removeItem('unmess-cart');setCartOpen(false);setNotice('Payment verified. Your templates are ready.');
+        setDeliveryLinks(result.links||[]);setCart([]);localStorage.removeItem(cartStorageKey);setCartOpen(false);setNotice('Payment verified. Your templates are ready.');
       }catch(error){setNotice(error instanceof Error?error.message:'Payment verification failed')}
     }});
     checkout.on('payment.failed',response=>setNotice(response.error?.description||'Payment failed. Nothing was charged.'));
