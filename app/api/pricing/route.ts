@@ -7,10 +7,12 @@ const countryCurrency: Record<string, string> = {
 
 export async function GET(request: Request) {
   const cf = (request as Request & { cf?: { country?: string } }).cf;
+  const timezone = new URL(request.url).searchParams.get('timezone');
+  const indiaTimezone = timezone === 'Asia/Kolkata' || timezone === 'Asia/Calcutta';
   const headerCountry =
     request.headers.get('x-vercel-ip-country') ||
     request.headers.get('cf-ipcountry');
-  const country = (headerCountry || cf?.country || 'IN').toUpperCase();
+  const country = (indiaTimezone ? 'IN' : headerCountry || cf?.country || 'IN').toUpperCase();
   const currency = countryCurrency[country] || 'USD';
   let rate = currency === 'INR' ? 1 : 0;
   if (!rate) {
