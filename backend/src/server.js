@@ -25,7 +25,8 @@ app.post('/api/payment/webhook', express.raw({ type: 'application/json', limit: 
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
-app.use(cors({ origin: required('FRONTEND_ORIGIN'), methods: ['GET', 'POST'] }));
+const frontendOrigin = required('FRONTEND_ORIGIN').replace(/\/+$/, '');
+app.use(cors({ origin: frontendOrigin, methods: ['GET', 'POST'] }));
 app.use(express.json({ limit: '32kb' }));
 
 const buckets = new Map();
