@@ -11,7 +11,7 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: FRONTEND_ORIGIN
-        value: https://unmess-eta.vercel.app
+        value: https://unmess.vercel.app
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB_NAME
