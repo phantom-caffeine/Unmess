@@ -5,7 +5,7 @@ export const templates = {
   'where-the-fck-is-my-money': { name: 'Where The F*ck Is My Money?', price: 499, url: 'https://sky-rhythm-395.notion.site/Where-The-F-ck-Is-My-Money-3d2b16643a1381af9b38cc431572dd50?source=copy_link' },
 };
 
-export const bundle = { id: 'everything-bundle', name: 'The Complete Creator & Career OS Bundle', price: 2000, templateIds: Object.keys(templates) };
+export const bundle = { id: 'everything-bundle', name: 'The Complete Creator & Career OS Bundle', price: 1999, templateIds: Object.keys(templates) };
 
 export function required(name) {
   const value = process.env[name];
