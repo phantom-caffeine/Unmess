@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { bundle, required, templates } from './config.js';
+import { required, templates } from './config.js';
 import { getTemplate } from './mongo.js';
 import { sendTemplateDelivery } from './email.js';
 
@@ -26,10 +26,6 @@ async function razorpayRequest(path, options = {}) {
 function normalizeItems(items) {
   if (!Array.isArray(items) || !items.length) throw new Error('Your bag is empty');
   const ids = [...new Set(items.map(String))];
-  if (ids.includes(bundle.id)) {
-    if (ids.length !== 1) throw new Error('Buy the bundle separately from individual templates');
-    return { checkoutIds: [bundle.id], deliveryIds: bundle.templateIds, amount: bundle.price };
-  }
   if (ids.some(id => !templates[id])) throw new Error('Unknown template in bag');
   return { checkoutIds: ids, deliveryIds: ids, amount: ids.reduce((sum, id) => sum + templates[id].price, 0) };
 }
@@ -46,7 +42,7 @@ export async function createOrder({ items, email }) {
       notes: { email: String(email).trim().toLowerCase(), items: selection.checkoutIds.join(','), delivery_status: 'pending' },
     }),
   });
-  return { keyId: required('RAZORPAY_KEY_ID'), orderId: order.id, amount: order.amount, currency: order.currency, name: 'Unmess', description: selection.checkoutIds.includes(bundle.id) ? bundle.name : `${selection.checkoutIds.length} Unmess template${selection.checkoutIds.length > 1 ? 's' : ''}` };
+  return { keyId: required('RAZORPAY_KEY_ID'), orderId: order.id, amount: order.amount, currency: order.currency, name: 'Unmess', description: `${selection.checkoutIds.length} Unmess template${selection.checkoutIds.length > 1 ? 's' : ''}` };
 }
 
 export function verifyCheckoutSignature({ orderId, paymentId, signature }) {
@@ -61,7 +57,7 @@ export function verifyWebhookSignature(rawBody, signature) {
 
 async function resolveDelivery(order) {
   const checkoutIds = String(order.notes?.items || '').split(',').filter(Boolean);
-  const deliveryIds = checkoutIds.includes(bundle.id) ? bundle.templateIds : checkoutIds;
+  const deliveryIds = checkoutIds;
   if (!deliveryIds.length || deliveryIds.some(id => !templates[id])) throw new Error('Order has invalid delivery items');
   const records = await Promise.all(deliveryIds.map(getTemplate));
   if (records.some(record => !record?.url)) throw new Error('A purchased template is unavailable');
