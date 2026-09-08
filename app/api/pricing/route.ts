@@ -7,8 +7,10 @@ const countryCurrency: Record<string, string> = {
 
 export async function GET(request: Request) {
   const cf = (request as Request & { cf?: { country?: string } }).cf;
-  const headerCountry = request.headers.get('cf-ipcountry');
-  const country = (cf?.country || headerCountry || 'US').toUpperCase();
+  const headerCountry =
+    request.headers.get('x-vercel-ip-country') ||
+    request.headers.get('cf-ipcountry');
+  const country = (headerCountry || cf?.country || 'IN').toUpperCase();
   const currency = countryCurrency[country] || 'USD';
   let rate = currency === 'INR' ? 1 : 0;
   if (!rate) {
@@ -22,10 +24,16 @@ export async function GET(request: Request) {
   if (!Number.isFinite(rate) || rate <= 0) {
     rate = currency === 'USD' ? 0.012 : 1;
     return Response.json({ country, currency: rate === 1 ? 'INR' : 'USD', rate, approximate: true }, {
-      headers: { 'Cache-Control': 'private, max-age=3600' },
+      headers: {
+        'Cache-Control': 'private, max-age=3600',
+        Vary: 'X-Vercel-IP-Country, CF-IPCountry',
+      },
     });
   }
   return Response.json({ country, currency, rate, approximate: currency !== 'INR' }, {
-    headers: { 'Cache-Control': 'private, max-age=21600' },
+    headers: {
+      'Cache-Control': 'private, max-age=21600',
+      Vary: 'X-Vercel-IP-Country, CF-IPCountry',
+    },
   });
 }
