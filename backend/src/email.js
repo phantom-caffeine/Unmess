@@ -18,11 +18,39 @@ function getTransporter() {
 const escapeHtml = (value = '') =>
   String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
+function parseSender(value) {
+  const match = String(value).match(/^\s*(.*?)\s*<([^<>]+)>\s*$/);
+  return match ? { name: match[1] || 'Unmess', email: match[2] } : { name: 'Unmess', email: String(value).trim() };
+}
+
+async function sendWithBrevoApi(message) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: parseSender(message.from),
+      to: [{ email: message.to }],
+      subject: message.subject,
+      textContent: message.text,
+      htmlContent: message.html,
+    }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || `Brevo API request failed (${response.status})`);
+  }
+  return response.json();
+}
+
 export async function sendTemplateDelivery({ email, productName, downloadUrl, orderId }) {
   const safeName = escapeHtml(productName);
   const safeUrl = escapeHtml(downloadUrl);
   const safeOrder = escapeHtml(orderId);
-  return getTransporter().sendMail({
+  const message = {
     from: required('MAIL_FROM'),
     to: email,
     subject: `Your ${productName} is ready ✦`,
@@ -39,5 +67,6 @@ export async function sendTemplateDelivery({ email, productName, downloadUrl, or
         </td></tr>
         <tr><td style="background:#eee9e1;padding:20px 42px;font-size:11px;color:#81766e">Made with a little intention. © Unmess</td></tr>
       </table></td></tr></table></body></html>`,
-  });
+  };
+  return process.env.BREVO_API_KEY ? sendWithBrevoApi(message) : getTransporter().sendMail(message);
 }
