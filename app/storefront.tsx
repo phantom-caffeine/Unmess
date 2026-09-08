@@ -50,7 +50,7 @@ const [pricing,setPricing]=useState({currency:'INR',rate:1,approximate:false});
 const analyticsBase=(process.env.NEXT_PUBLIC_ANALYTICS_API_URL||'').replace(/\/$/,'');
 const cartStorageKey='unmess-cart-v2';
 // Paste your Google Meet, Calendly, or booking URL here when it is ready.
-const customTemplateCallUrl=(process.env.NEXT_PUBLIC_BOOKING_URL||'').trim();
+const customTemplateCallUrl=(process.env.NEXT_PUBLIC_BOOKING_URL||'https://calendar.app.google/XGrVrBqXQAgeapMXA').trim();
 const customTemplateEmailUrl='mailto:unmessteam@gmail.com?subject=Custom%20Notion%20template%20call&body=Hi%20Unmess%20team%2C%0A%0AI%27d%20like%20to%20discuss%20a%20custom%20Notion%20template.%0A%0AWhat%20I%20need%20help%20organising%3A%20%0APreferred%20days%2Ftimes%3A%20%0A%0AThank%20you!';
 const formatPrice=(amount:number)=>new Intl.NumberFormat(undefined,{style:'currency',currency:pricing.currency,maximumFractionDigits:pricing.currency==='JPY'||pricing.currency==='KRW'?0:2}).format(amount*pricing.rate);
 const trackClick=(product:Product)=>{if(!analyticsBase)return;void fetch(analyticsBase+'/api/clicks/'+product.slug,{method:'POST',keepalive:true}).catch(()=>{});};
