@@ -3,7 +3,7 @@ import './globals.css';
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://unmess.vercel.app'),
+  metadataBase: new URL('https://unmess-seven.vercel.app'),
   title: 'Unmess',
   description: 'Thoughtfully crafted Notion templates to find your rhythm and make room for what matters.',
   icons: {
